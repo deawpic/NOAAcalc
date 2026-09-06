@@ -1,3 +1,6 @@
+** Link คำนวณ ** >>> https://deawpic.github.io/NOAAcalc/
+-----
+
 ## สูตรดาราศาสตร์มาตรฐาน NOAA Solar Calculator — อธิบายครบทุกขั้นตอน
 
 อัลกอริทึมนี้พัฒนาโดย **NOAA Global Monitoring Laboratory** โดยอ้างอิงสมการจากหนังสือ *Astronomical Algorithms* ของ **Jean Meeus** ให้ความแม่นยำระดับ **±1 นาที** สำหรับละติจูดระหว่าง ±72° [noaa](https://gml.noaa.gov/grad/solcalc/calcdetails.html)
