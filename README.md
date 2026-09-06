@@ -1,9 +1,9 @@
 ** Link คำนวณ ** >>> https://deawpic.github.io/NOAAcalc/
 -----
 
-## สูตรดาราศาสตร์มาตรฐาน NOAA Solar Calculator — อธิบายครบทุกขั้นตอน
+## สูตรดาราศาสตร์มาตรฐาน NOAA Solar Calculator
 
-อัลกอริทึมนี้พัฒนาโดย **NOAA Global Monitoring Laboratory** โดยอ้างอิงสมการจากหนังสือ *Astronomical Algorithms* ของ **Jean Meeus** ให้ความแม่นยำระดับ **±1 นาที** สำหรับละติจูดระหว่าง ±72° [noaa](https://gml.noaa.gov/grad/solcalc/calcdetails.html)
+สูตรดาราศาสตร์มาตรฐานที่ใช้ใน NOAA Solar Calculator เป็นสมการที่พัฒนาขึ้นโดย NOAA Global Monitoring Laboratory ซึ่งอ้างอิงและดัดแปลงมาจากอัลกอริทึมในหนังสือ Astronomical Algorithms โดย Jean Meeus เพื่อใช้คำนวณตำแหน่งดวงอาทิตย์ (Azimuth และ Elevation) รวมถึงเวลาพระอาทิตย์ขึ้น-ตก ให้ความแม่นยำระดับ **±1 นาที** สำหรับละติจูดระหว่าง ±72° [noaa](https://gml.noaa.gov/grad/solcalc/calcdetails.html)
 
 ### ตารางที่ 1: ภาพรวม 12 ขั้นตอนของอัลกอริทึม
 
