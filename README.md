@@ -50,19 +50,36 @@
 
 ระบบ **NOAA Solar Calculator & Agent Harness** ได้รับการออกแบบให้ตอบโจทย์การใช้งานหลากหลายระดับ ตั้งแต่ผู้ใช้ทั่วไป นักดาราศาสตร์ จนถึงวิศวกรระบบ AI โดยมีช่องทางหลัก 3 รูปแบบ ดังนี้:
 
-```text
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    NOAA Solar Calculator System Architecture                │
-├──────────────────────────┬────────────────────────────┬─────────────────────┤
-│ 1. Single Page HTML App  │ 2. Webchat UI & Local REST │ 3. Antigravity AI   │
-│                          │    API Server              │    Desktop Agent    │
-├──────────────────────────┼────────────────────────────┼─────────────────────┤
-│ • index.html             │ • python harness.py --serve│ • Antigravity IDE   │
-│ • ทำงานบนเบราว์เซอร์ 100% │ • Dark-mode Thai Chat UI   │ • AGENTS.md & SKILL │
-│ • ไม่ต้องติดตั้ง Python  │ • พอร์ตเริ่มต้น 8080       │ • สั่งบันทึก UTF-8  │
-│ • แผนที่ Leaflet / Google│ • REST API: /api/query     │ • กฎเหล็ก No Halluc │
-│ • ทำงานแบบ Offline ได้   │ • คลิก Google Maps ทันที   │ • Smart 4-Tier Fall │
-└──────────────────────────┴────────────────────────────┴─────────────────────┘
+```mermaid
+flowchart TB
+    USER([👤 ผู้ใช้งาน / นักพัฒนา / AI Agent]) --> SPA
+    USER --> API
+    USER --> AGT
+
+    subgraph ARCH["☀️ สถาปัตยกรรม 3 ช่องทางการใช้งานหลัก (Three Primary Interfaces)"]
+        direction TB
+
+        subgraph SPA_BOX["1. Single Page HTML Web App"]
+            SPA["📄 index.html / NOAAcalc.html<br/>• ทำงานบนเบราว์เซอร์ 100% (Client-side)<br/>• Zero-Dependency ไม่ต้องติดตั้ง Python<br/>• แผนที่ Interactive Leaflet OSM / Google Maps<br/>• รองรับการใช้งานแบบ Offline 100%"]
+        end
+
+        subgraph API_BOX["2. Webchat UI & Local REST API"]
+            API["🌐 Local Web Server (Port 8080)<br/>• คำสั่ง: python harness.py --serve<br/>• Dark-mode Thai Chat Web Interface<br/>• REST API: /api/query & /api/calculate<br/>• ปักหมุดพิกัด Google Maps อัตโนมัติ"]
+        end
+
+        subgraph AGT_BOX["3. Google Antigravity Desktop Agent"]
+            AGT["🤖 AI Coding & Astronomy Agent<br/>• Antigravity IDE & noaa-solar-harness Skill<br/>• กฎเหล็ก AGENTS.md (Deterministic / No Hallucination)<br/>• ระบบค้นหาพิกัด 4-Tier Smart Proximity Fallback<br/>• สั่งบันทึกรายงานอัตโนมัติลง reports/ (UTF-8)"]
+        end
+    end
+
+    CORE[("⚙️ NOAA Astronomical Core Engine<br/>(Jean Meeus 12-Step Algorithm, ±1 Minute Accuracy)")]
+
+    SPA -->|คำนวณทางดาราศาสตร์| CORE
+    API -->|คำนวณทางดาราศาสตร์| CORE
+    AGT -->|คำนวณทางดาราศาสตร์| CORE
+
+    OUT["📊 ข้อมูลดวงอาทิตย์: เวลาพระอาทิตย์ขึ้น-ตก, เที่ยงวันจริง, สนธยา 3 ระดับ, ปฏิทินสองศักราช (พ.ศ./ค.ศ.) & หมุด Google Maps"]
+    CORE --> OUT
 ```
 
 ---
