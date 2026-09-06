@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NOAA Solar Calculator — ดวงอาทิตย์ขึ้น/ตก</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--line:#334155;--txt:#e2e8f0;--mut:#94a3b8;
+      --acc:#38bdf8;--ok:#34d399;--warn:#fbbf24;--rise:#fb923c;--set:#a78bfa}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Sarabun","Segoe UI",Tahoma,sans-serif;background:var(--bg);color:var(--txt)}
+header{padding:16px 20px;background:linear-gradient(135deg,#0ea5e9,#6366f1)}
+header h1{margin:0;font-size:19px}
+header p{margin:4px 0 0;font-size:12.5px;opacity:.92}
+.wrap{display:grid;grid-template-columns:minmax(320px,400px) 1fr;gap:14px;padding:14px}
+@media(max-width:920px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
+.card h2{margin:0 0 10px;font-size:14.5px;color:var(--acc);border-bottom:1px solid var(--line);padding-bottom:8px}
+label{display:block;font-size:12px;color:var(--mut);margin:8px 0 4px}
+input,select,button{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--line);
+      background:#0b1220;color:var(--txt);font-size:14px;font-family:inherit}
+button{background:var(--acc);color:#00212f;font-weight:700;border:none;cursor:pointer}
+button:hover{filter:brightness(1.12)}
+button.ghost{background:transparent;border:1px solid var(--line);color:var(--txt);font-weight:500}
+.row{display:grid;gap:8px;margin-top:8px}
+.r2{grid-template-columns:1fr 1fr}.r3{grid-template-columns:1fr 1fr 1fr}
+#map{height:400px;border-radius:12px;border:1px solid var(--line);background:#0b1220}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}
+th,td{border:1px solid var(--line);padding:7px 9px;text-align:left}
+th{background:#0b1220;color:var(--acc);font-weight:600}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.kpi{background:#0b1220;border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center}
+.kpi b{display:block;font-size:25px;font-variant-numeric:tabular-nums;color:var(--ok)}
+.kpi.rise b{color:var(--rise)} .kpi.set b{color:var(--set)}
+.kpi span{font-size:11.5px;color:var(--mut)}
+.note{font-size:12px;color:var(--mut);line-height:1.65}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;background:#0b1220;
+      border:1px solid var(--line);font-size:11px;color:var(--mut);margin-right:5px}
+details summary{cursor:pointer;color:var(--acc);font-size:13.5px;padding:4px 0}
+.hide{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>☀️ NOAA Solar Calculator — เวลาดวงอาทิตย์ขึ้น / ตก</h1>
+  <p>เลือกตำแหน่งจากแผนที่ + เลือกวันจากปฏิทิน → คำนวณด้วยอัลกอริทึม NOAA (Jean Meeus) ความแม่นยำ ±1 นาที</p>
+</header>
+
+<div class="wrap">
+
+  <!-- ================= คอลัมน์ซ้าย : อินพุต ================= -->
+  <div>
+    <div class="card">
+      <h2>🔑 Google Maps API Key <span class="pill">ไม่ใส่ก็ใช้ได้</span></h2>
+      <input id="gkey" placeholder="วาง API Key ที่นี่ แล้วกดโหลด">
+      <div class="row r2">
+        <button onclick="loadGoogle()">โหลด Google Maps</button>
+        <button class="ghost" onclick="clearKey()">ล้าง Key</button>
+      </div>
+      <p class="note" id="mapmode">โหมดปัจจุบัน: <b style="color:var(--warn)">OpenStreetMap (สำรอง)</b></p>
+    </div>
+
+    <div class="card">
+      <h2>📍 ตำแหน่งที่ตั้ง</h2>
+      <label>ค้นหาสถานที่</label>
+      <input id="search" placeholder="เช่น อำเภอบ้านโป่ง ราชบุรี">
+      <div class="row"><button class="ghost" id="btnSearch" onclick="osmSearch()">ค้นหา (OSM)</button></div>
+
+      <label>สถานที่ตั้งสำเร็จรูป</label>
+      <select id="preset" onchange="usePreset()">
+        <option value="13.8199,99.8722">อ.บ้านโป่ง จ.ราชบุรี</option>
+        <option value="13.5282,99.8134">อ.เมือง จ.ราชบุรี</option>
+        <option value="13.8199,100.0621">จ.นครปฐม</option>
+        <option value="13.7563,100.5018">กรุงเทพมหานคร</option>
+        <option value="14.0227,99.5328">จ.กาญจนบุรี</option>
+        <option value="18.7883,98.9853">จ.เชียงใหม่</option>
+        <option value="16.4322,102.8236">จ.ขอนแก่น</option>
+        <option value="7.8804,98.3923">จ.ภูเก็ต</option>
+        <option value="6.5,101.2833">จ.นราธิวาส (ใต้สุด)</option>
+      </select>
+
+      <div class="row r2">
+        <div><label>ละติจูด (°N +)</label><input id="lat" type="number" step="0.000001" value="13.8199"></div>
+        <div><label>ลองจิจูด (°E +)</label><input id="lon" type="number" step="0.000001" value="99.8722"></div>
+      </div>
+      <p class="note" id="placeName">📌 อ.บ้านโป่ง จ.ราชบุรี</p>
+    </div>
+
+    <div class="card">
+      <h2>📅 เลือกวันที่</h2>
+      <label>ปฏิทิน (Date Picker)</label>
+      <input id="dpick" type="date" value="2022-03-27" onchange="fromPicker()">
+
+      <div class="row r3">
+        <div><label>วัน</label><select id="dd" onchange="fromSelect()"></select></div>
+        <div><label>เดือน</label><select id="mm" onchange="fromSelect()"></select></div>
+        <div><label>ปี <span id="eraLbl">(พ.ศ.)</span></label><select id="yy" onchange="fromSelect()"></select></div>
+      </div>
+      <div class="row r2">
+        <button class="ghost" onclick="toggleEra()">สลับ พ.ศ. ⇄ ค.ศ.</button>
+        <button class="ghost" onclick="today()">วันนี้</button>
+      </div>
+
+      <label>เขตเวลา (UTC offset)</label>
+      <div class="row r2">
+        <input id="tz" type="number" step="0.25" value="7">
+        <button class="ghost" onclick="autoTZ()">คำนวณจากลองจิจูด</button>
+      </div>
+
+      <div class="row"><button onclick="run()">🔆 คำนวณเวลาดวงอาทิตย์</button></div>
+    </div>
+  </div>
+
+  <!-- ================= คอลัมน์ขวา : แผนที่ + ผลลัพธ์ ================= -->
+  <div>
+    <div class="card"><h2>🗺️ คลิกบนแผนที่เพื่อเลือกตำแหน่ง</h2><div id="map"></div></div>
+
+    <div class="card">
+      <h2>🎯 ผลลัพธ์</h2>
+      <p class="note" id="headline"></p>
+      <div class="kpis">
+        <div class="kpi rise"><b id="kRise">–</b><span>ดวงอาทิตย์ขึ้น</span></div>
+        <div class="kpi set"><b id="kSet">–</b><span>ดวงอาทิตย์ตก</span></div>
+        <div class="kpi"><b id="kNoon">–</b><span>เที่ยงวันจริง</span></div>
+        <div class="kpi"><b id="kLen">–</b><span>ความยาวกลางวัน</span></div>
+      </div>
+      <table id="tDetail"></table>
+    </div>
+
+    <div class="card">
+      <h2>🧮 ตารางคำนวณ 12 ขั้นตอนของ NOAA</h2>
+      <details open><summary>แสดง / ซ่อนค่าตัวแปรดิบ</summary><table id="tSteps"></table></details>
+    </div>
+
+    <div class="card">
+      <h2>📊 ตารางทั้งเดือน</h2>
+      <div class="row r2">
+        <button class="ghost" onclick="monthTable()">สร้างตารางรายวันของเดือนนี้</button>
+        <button class="ghost" onclick="downloadCSV()">⬇️ ดาวน์โหลด CSV</button>
+      </div>
+      <table id="tMonth"></table>
+    </div>
+
+    <div class="card">
+      <h2>ℹ️ หมายเหตุความแม่นยำ</h2>
+      <p class="note">
+        • สูตรนี้แม่นยำ <b>±1 นาที</b> ในช่วงละติจูด |φ| &lt; 72° &nbsp;
+        • ใช้มุมเซนิท <b>90.833°</b> (หักเหแสงบรรยากาศ 0.567° + รัศมีจานดวงอาทิตย์ 0.266°)<br>
+        • สมมติขอบฟ้าราบเรียบที่ระดับน้ำทะเล — ถ้ามีภูเขาบัง เวลาจริงอาจต่างได้ถึง 10 นาที<br>
+        • ค่าอ้างอิงตรวจสอบ: อ.บ้านโป่ง 27 มี.ค. 2565 → ขึ้น <b>06:19:58</b> / ตก <b>18:31:56</b>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+/* ============================================================
+   ส่วนที่ 1 : แกนคำนวณ NOAA Solar Calculator (Jean Meeus)
+   ============================================================ */
+const D2R=Math.PI/180, R2D=180/Math.PI;
+const sin=d=>Math.sin(d*D2R), cos=d=>Math.cos(d*D2R), tan=d=>Math.tan(d*D2R);
+const asin=x=>Math.asin(Math.max(-1,Math.min(1,x)))*R2D;
+const acos=x=>Math.acos(Math.max(-1,Math.min(1,x)))*R2D;
+const mod360=x=>((x%360)+360)%360;
+
+/* ขั้นที่ 1 — Julian Day ที่ 00:00 UT */
+function julianDay(y,m,d){
+  if(m<=2){y-=1;m+=12;}
+  const A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;
+}
+
+/* ขั้นที่ 2–12 — คำนวณทุกอย่าง */
+function solar(lat,lon,tz,Y,M,D){
+  const JD = julianDay(Y,M,D) + (12-tz)/24;            // 1) JD ณ เที่ยงวันท้องถิ่น
+  const T  = (JD-2451545.0)/36525;                     // 2) Julian Century
+  const L0 = mod360(280.46646+T*(36000.76983+T*0.0003032));         // 3)
+  const M0 = 357.52911+T*(35999.05029-0.0001537*T);                 // 4)
+  const ec = 0.016708634-T*(0.000042037+0.0000001267*T);            // 5)
+  const C  = sin(M0)*(1.914602-T*(0.004817+0.000014*T))
+           + sin(2*M0)*(0.019993-0.000101*T)
+           + sin(3*M0)*0.000289;                                    // 6)
+  const TL = L0+C;                                                  // 7)
+  const om = 125.04-1934.136*T;
+  const lam= TL-0.00569-0.00478*sin(om);                            // 8)
+  const e0 = 23+(26+((21.448-T*(46.815+T*(0.00059-T*0.001813))))/60)/60;
+  const eps= e0+0.00256*cos(om);                                    // 9)
+  const dec= asin(sin(eps)*sin(lam));                               // 10)
+  const yv = Math.pow(tan(eps/2),2);
+  const EoT= 4*R2D*( yv*sin(2*L0) - 2*ec*sin(M0) + 4*ec*yv*sin(M0)*cos(2*L0)
+                   - 0.5*yv*yv*sin(4*L0) - 1.25*ec*ec*sin(2*M0) );  // 11)
+  const noon = 720 - 4*lon - EoT + tz*60;                           // เที่ยงวันจริง (นาที)
+
+  /* 12) Hour Angle ตามมุมเซนิทที่กำหนด */
+  function HA(z){
+    const c = cos(z)/(cos(lat)*cos(dec)) - tan(lat)*tan(dec);
+    return (c>1||c<-1) ? null : acos(c);
+  }
+  function pair(z){
+    const h=HA(z);
+    return h===null ? [null,null,null] : [noon-4*h, noon+4*h, h];
+  }
+  const [rise,set,H]   = pair(90.833);
+  const [cvA,cvB]      = pair(96);
+  const [ntA,ntB]      = pair(102);
+  const [asA,asB]      = pair(108);
+
+  /* ทิศอะซิมุทตอนขึ้น/ตก (0°=เหนือ, 90°=ตะวันออก) */
+  let azR=null,azS=null;
+  if(rise!==null){
+    const h=-0.833;
+    azR = acos( (sin(dec)-sin(lat)*sin(h)) / (cos(lat)*cos(h)) );
+    azS = 360-azR;
+  }
+  return {JD,T,L0,M:M0,ec,C,TL,om,lam,eps,dec,yv,EoT,noon,H,
+          rise,set,cvA,cvB,ntA,ntB,asA,asB,azR,azS,
+          len:(rise===null?null:set-rise)};
+}
+
+/* ============================================================
+   ส่วนที่ 2 : ตัวช่วยจัดรูปแบบ
+   ============================================================ */
+const pad=n=>String(n).padStart(2,'0');
+function hms(min){
+  if(min===null||isNaN(min)) return '—';
+  let m=((min%1440)+1440)%1440;
+  const h=Math.floor(m/60), mi=Math.floor(m%60), s=Math.round(((m%60)-mi)*60);
+  return `${pad(h)}:${pad(mi)}:${pad(s===60?59:s)}`;
+}
+function hm(min){ return hms(min).slice(0,5); }
+function dur(min){
+  if(min===null) return '—';
+  const h=Math.floor(min/60), mi=Math.round(min%60);
+  return `${h} ชม. ${mi} นาที`;
+}
+const TH_MONTH=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+const TH_DAY=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+
+/* ============================================================
+   ส่วนที่ 3 : ปฏิทิน (วัน/เดือน/ปี + พ.ศ./ค.ศ.)
+   ============================================================ */
+let BE=true; // true = แสดงเป็น พ.ศ.
+function buildSelects(){
+  const dd=document.getElementById('dd'), mm=document.getElementById('mm'), yy=document.getElementById('yy');
+  dd.innerHTML=''; mm.innerHTML=''; yy.innerHTML='';
+  for(let i=1;i<=31;i++) dd.add(new Option(i,i));
+  TH_MONTH.forEach((n,i)=>mm.add(new Option(n,i+1)));
+  for(let y=1900;y<=2100;y++) yy.add(new Option(BE?y+543:y, y));
+  document.getElementById('eraLbl').textContent = BE?'(พ.ศ.)':'(ค.ศ.)';
+}
+function syncSelectsFromPicker(){
+  const [y,m,d]=document.getElementById('dpick').value.split('-').map(Number);
+  document.getElementById('yy').value=y;
+  document.getElementById('mm').value=m;
+  document.getElementById('dd').value=d;
+}
+function fromPicker(){ syncSelectsFromPicker(); run(); }
+function fromSelect(){
+  const y=+document.getElementById('yy').value,
+        m=+document.getElementById('mm').value,
+        dMax=new Date(y,m,0).getDate();
+  let d=+document.getElementById('dd').value;
+  if(d>dMax){ d=dMax; document.getElementById('dd').value=d; }
+  document.getElementById('dpick').value=`${y}-${pad(m)}-${pad(d)}`;
+  run();
+}
+function toggleEra(){
+  const cur=document.getElementById('yy').value;
+  BE=!BE; buildSelects(); document.getElementById('yy').value=cur;
+  syncSelectsFromPicker();
+}
+function today(){
+  const t=new Date();
+  document.getElementById('dpick').value=`${t.getFullYear()}-${pad(t.getMonth()+1)}-${pad(t.getDate())}`;
+  fromPicker();
+}
+
+/* ============================================================
+   ส่วนที่ 4 : แผนที่ (Google Maps ถ้ามี Key / มิฉะนั้นใช้ Leaflet)
+   ============================================================ */
+let lmap,lmark,gmap,gmark,useGoogle=false;
+function initLeaflet(){
+  lmap=L.map('map').setView([+lat.value,+lon.value],11);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {maxZoom:19,attribution:'© OpenStreetMap'}).addTo(lmap);
+  lmark=L.marker([+lat.value,+lon.value],{draggable:true}).addTo(lmap);
+  lmark.on('dragend',e=>{const p=e.target.getLatLng(); setLatLng(p.lat,p.lng);});
+  lmap.on('click',e=>{ lmark.setLatLng(e.latlng); setLatLng(e.latlng.lat,e.latlng.lng); osmReverse(); });
+}
+function setLatLng(a,b){
+  lat.value=(+a).toFixed(6); lon.value=(+b).toFixed(6); run();
+}
+function osmSearch(){
+  const q=document.getElementById('search').value.trim(); if(!q) return;
+  fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=th&q=${encodeURIComponent(q)}`)
+   .then(r=>r.json()).then(j=>{
+      if(!j.length){ alert('ไม่พบสถานที่'); return; }
+      const la=+j[0].lat, lo=+j[0].lon;
+      setLatLng(la,lo);
+      document.getElementById('placeName').textContent='📌 '+j[0].display_name;
+      if(useGoogle){ gmap.setCenter({lat:la,lng:lo}); gmark.setPosition({lat:la,lng:lo}); }
+      else { lmap.setView([la,lo],12); lmark.setLatLng([la,lo]); }
+   }).catch(()=>alert('ค้นหาไม่สำเร็จ'));
+}
+function osmReverse(){
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&accept-language=th&lat=${lat.value}&lon=${lon.value}`)
+   .then(r=>r.json()).then(j=>{
+      if(j.display_name) document.getElementById('placeName').textContent='📌 '+j.display_name;
+   }).catch(()=>{});
+}
+function loadGoogle(){
+  const k=document.getElementById('gkey').value.trim();
+  if(!k){ alert('กรุณาใส่ API Key ก่อน'); return; }
+  localStorage.setItem('gmk',k);
+  const s=document.createElement('script');
+  s.src=`https://maps.googleapis.com/maps/api/js?key=${k}&libraries=places&language=th&region=TH&callback=initGMap`;
+  s.async=true; s.onerror=()=>alert('โหลด Google Maps ไม่สำเร็จ — ตรวจสอบ API Key');
+  document.head.appendChild(s);
+}
+function clearKey(){ localStorage.removeItem('gmk'); document.getElementById('gkey').value=''; location.reload(); }
+window.initGMap=function(){
+  useGoogle=true;
+  if(lmap){ lmap.remove(); lmap=null; }
+  document.getElementById('map').innerHTML='';
+  const c={lat:+lat.value,lng:+lon.value};
+  gmap=new google.maps.Map(document.getElementById('map'),
+        {center:c,zoom:11,mapTypeId:'hybrid',streetViewControl:false});
+  gmark=new google.maps.Marker({position:c,map:gmap,draggable:true});
+  gmap.addListener('click',e=>{ gmark.setPosition(e.latLng);
+        setLatLng(e.latLng.lat(),e.latLng.lng()); gRev(e.latLng); });
+  gmark.addListener('dragend',e=>{ setLatLng(e.latLng.lat(),e.latLng.lng()); gRev(e.latLng); });
+  const ac=new google.maps.places.Autocomplete(document.getElementById('search'),
+        {fields:['geometry','name','formatted_address'],componentRestrictions:{country:'th'}});
+  ac.addListener('place_changed',()=>{
+     const p=ac.getPlace(); if(!p.geometry) return;
+     gmap.setCenter(p.geometry.location); gmap.setZoom(13);
+     gmark.setPosition(p.geometry.location);
+     setLatLng(p.geometry.location.lat(),p.geometry.location.lng());
+     document.getElementById('placeName').textContent='📌 '+(p.formatted_address||p.name);
+  });
+  document.getElementById('mapmode').innerHTML='โหมดปัจจุบัน: <b style="color:var(--ok)">Google Maps ✔</b>';
+  document.getElementById('btnSearch').classList.add('hide');
+  run();
+};
+function gRev(ll){
+  new google.maps.Geocoder().geocode({location:ll,language:'th'},(r,st)=>{
+    if(st==='OK'&&r[0]) document.getElementById('placeName').textContent='📌 '+r[0].formatted_address;
+  });
+}
+function usePreset(){
+  const [a,b]=document.getElementById('preset').value.split(',').map(Number);
+  setLatLng(a,b);
+  document.getElementById('placeName').textContent='📌 '+
+      document.getElementById('preset').selectedOptions[0].text;
+  if(useGoogle){ gmap.setCenter({lat:a,lng:b}); gmark.setPosition({lat:a,lng:b}); }
+  else { lmap.setView([a,b],11); lmark.setLatLng([a,b]); }
+}
+function autoTZ(){ document.getElementById('tz').value=Math.round((+lon.value)/15); run(); }
+
+/* ============================================================
+   ส่วนที่ 5 : แสดงผล
+   ============================================================ */
+function getInput(){
+  return {la:+lat.value, lo:+lon.value, tz:+document.getElementById('tz').value,
+          Y:+document.getElementById('yy').value,
+          M:+document.getElementById('mm').value,
+          D:+document.getElementById('dd').value};
+}
+function run(){
+  const i=getInput();
+  if(isNaN(i.la)||isNaN(i.lo)) return;
+  const s=solar(i.la,i.lo,i.tz,i.Y,i.M,i.D);
+  const dow=TH_DAY[new Date(i.Y,i.M-1,i.D).getDay()];
+
+  document.getElementById('headline').innerHTML =
+    `<span class="pill">วัน${dow}ที่ ${i.D} ${TH_MONTH[i.M-1]} พ.ศ. ${i.Y+543}</span>`+
+    `<span class="pill">φ ${i.la.toFixed(4)}° , λ ${i.lo.toFixed(4)}°</span>`+
+    `<span class="pill">UTC${i.tz>=0?'+':''}${i.tz}</span>`;
+
+  document.getElementById('kRise').textContent = hm(s.rise);
+  document.getElementById('kSet').textContent  = hm(s.set);
+  document.getElementById('kNoon').textContent = hm(s.noon);
+  document.getElementById('kLen').textContent  = s.len===null?'—':
+        `${Math.floor(s.len/60)}:${pad(Math.round(s.len%60))}`;
+
+  document.getElementById('tDetail').innerHTML = `
+   <tr><th>เหตุการณ์</th><th>มุมเซนิท</th><th>เช้า</th><th>เย็น</th></tr>
+   <tr><td>ดวงอาทิตย์ขึ้น / ตก</td><td>90.833°</td><td class="num">${hms(s.rise)}</td><td class="num">${hms(s.set)}</td></tr>
+   <tr><td>สนธยาพลเรือน (Civil)</td><td>96°</td><td class="num">${hms(s.cvA)}</td><td class="num">${hms(s.cvB)}</td></tr>
+   <tr><td>สนธยาเดินเรือ (Nautical)</td><td>102°</td><td class="num">${hms(s.ntA)}</td><td class="num">${hms(s.ntB)}</td></tr>
+   <tr><td>สนธยาดาราศาสตร์</td><td>108°</td><td class="num">${hms(s.asA)}</td><td class="num">${hms(s.asB)}</td></tr>
+   <tr><td>เที่ยงวันจริง (Solar Noon)</td><td>—</td><td class="num" colspan="2">${hms(s.noon)}</td></tr>
+   <tr><td>ความยาวกลางวัน</td><td>—</td><td class="num" colspan="2">${dur(s.len)}</td></tr>
+   <tr><td>ทิศดวงอาทิตย์ขึ้น / ตก</td><td>—</td><td class="num">${s.azR===null?'—':s.azR.toFixed(2)+'°'}</td>
+       <td class="num">${s.azS===null?'—':s.azS.toFixed(2)+'°'}</td></tr>`;
+
+  document.getElementById('tSteps').innerHTML = `
+   <tr><th>ขั้น</th><th>ตัวแปร</th><th>ค่าที่คำนวณได้</th></tr>
+   <tr><td>1</td><td>Julian Day (JD)</td><td class="num">${s.JD.toFixed(6)}</td></tr>
+   <tr><td>2</td><td>Julian Century (T)</td><td class="num">${s.T.toFixed(9)}</td></tr>
+   <tr><td>3</td><td>Geometric Mean Longitude (L₀)</td><td class="num">${s.L0.toFixed(5)}°</td></tr>
+   <tr><td>4</td><td>Geometric Mean Anomaly (M)</td><td class="num">${mod360(s.M).toFixed(5)}°</td></tr>
+   <tr><td>5</td><td>Orbit Eccentricity (e)</td><td class="num">${s.ec.toFixed(9)}</td></tr>
+   <tr><td>6</td><td>Equation of Center (C)</td><td class="num">${s.C.toFixed(6)}°</td></tr>
+   <tr><td>7</td><td>True Longitude (☉)</td><td class="num">${mod360(s.TL).toFixed(5)}°</td></tr>
+   <tr><td>8</td><td>Apparent Longitude (λ)</td><td class="num">${mod360(s.lam).toFixed(5)}°</td></tr>
+   <tr><td>9</td><td>Obliquity of Ecliptic (ε)</td><td class="num">${s.eps.toFixed(6)}°</td></tr>
+   <tr><td>10</td><td>Solar Declination (δ)</td><td class="num">${s.dec.toFixed(5)}°</td></tr>
+   <tr><td>11</td><td>Equation of Time (EoT)</td><td class="num">${s.EoT.toFixed(4)} นาที</td></tr>
+   <tr><td>12</td><td>Hour Angle (H)</td><td class="num">${s.H===null?'—':s.H.toFixed(5)+'°'}</td></tr>
+   <tr><td>—</td><td>y = tan²(ε/2)</td><td class="num">${s.yv.toFixed(8)}</td></tr>
+   <tr><td>—</td><td>Solar Noon (นาทีจากเที่ยงคืน)</td><td class="num">${s.noon.toFixed(3)}</td></tr>`;
+}
+
+/* ---- ตารางทั้งเดือน + CSV ---- */
+let csvData='';
+function monthTable(){
+  const i=getInput(), days=new Date(i.Y,i.M,0).getDate();
+  let h=`<tr><th>วันที่</th><th>วัน</th><th>ขึ้น</th><th>ตก</th><th>เที่ยงจริง</th><th>ความยาววัน</th><th>δ</th><th>EoT</th></tr>`;
+  csvData='date,weekday,sunrise,sunset,solar_noon,day_length_min,declination_deg,eot_min\n';
+  for(let d=1;d<=days;d++){
+    const s=solar(i.la,i.lo,i.tz,i.Y,i.M,d);
+    const w=TH_DAY[new Date(i.Y,i.M-1,d).getDay()];
+    h+=`<tr><td class="num">${d} ${TH_MONTH[i.M-1]} ${i.Y+543}</td><td>${w}</td>
+        <td class="num">${hm(s.rise)}</td><td class="num">${hm(s.set)}</td>
+        <td class="num">${hm(s.noon)}</td><td class="num">${dur(s.len)}</td>
+        <td class="num">${s.dec.toFixed(3)}°</td><td class="num">${s.EoT.toFixed(2)}</td></tr>`;
+    csvData+=`${i.Y}-${pad(i.M)}-${pad(d)},${w},${hms(s.rise)},${hms(s.set)},${hms(s.noon)},${s.len.toFixed(2)},${s.dec.toFixed(4)},${s.EoT.toFixed(3)}\n`;
+  }
+  document.getElementById('tMonth').innerHTML=h;
+}
+function downloadCSV(){
+  if(!csvData){ monthTable(); }
+  const i=getInput();
+  const b=new Blob(['\uFEFF'+csvData],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(b);
+  a.download=`sun_${i.Y}-${pad(i.M)}_${i.la.toFixed(3)}_${i.lo.toFixed(3)}.csv`;
+  a.click();
+}
+
+/* ============================================================
+   ส่วนที่ 6 : เริ่มทำงาน
+   ============================================================ */
+buildSelects();
+syncSelectsFromPicker();
+initLeaflet();
+const savedKey=localStorage.getItem('gmk');
+if(savedKey){ document.getElementById('gkey').value=savedKey; loadGoogle(); }
+run();
+</script>
+</body>
+</html>

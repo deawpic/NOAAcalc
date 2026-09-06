@@ -1,0 +1,25 @@
+# Python cache & artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Generated reports & output directory
+reports/
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
