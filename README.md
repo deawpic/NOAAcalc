@@ -1,12 +1,34 @@
 # ☀️ NOAA Solar Calculator & Agent Harness (ภาษาไทย)
 
-> 🔗 **เว็บแอปคำนวณออนไลน์ (Live Demo)**: [https://deawpic.github.io/NOAAcalc/](https://deawpic.github.io/NOAAcalc/)
+[![NOAA Standard](https://img.shields.io/badge/Algorithm-Jean%20Meeus%20NOAA%20(%C2%B11%20min)-orange.svg)](https://gml.noaa.gov/grad/solcalc/calcdetails.html)
+[![Timezone](https://img.shields.io/badge/Timezone-Local%20Time%20(UTC%2B7)-blue.svg)]()
+[![Calendar](https://img.shields.io/badge/Calendar-%E0%B8%9E.%E0%B8%A8.%20%2F%20%E0%B8%84.%E0%B8%A8.-green.svg)]()
+[![Maps](https://img.shields.io/badge/Google%20Maps-Precise%20Coordinates-red.svg)]()
+[![Fallback](https://img.shields.io/badge/Smart%20Fallback-4--Tier%20Proximity-purple.svg)]()
+[![Reports](https://img.shields.io/badge/Reports-reports%2F%20(UTF--8)-teal.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-20%2F20%20Passing-brightgreen.svg)]()
 
+> 🔗 **เว็บแอปคำนวณออนไลน์ (Live Demo)**: [https://deawpic.github.io/NOAAcalc/](https://deawpic.github.io/NOAAcalc/)
+  ---
+ ** คำนวณตำแหน่งดวงอาทิตย์ (Azimuth และ Elevation) รวมถึงเวลาพระอาทิตย์ขึ้น-ตก ความแม่นยำระดับ **±1 นาที** สำหรับละติจูดระหว่าง ±72° [noaa](https://gml.noaa.gov/grad/solcalc/calcdetails.html)
 ---
 
 ## 📑 สารบัญ (Table of Contents)
 
-- [1. สูตรดาราศาสตร์มาตรฐาน NOAA Solar Calculator](#1-สูตรดาราศาสตร์มาตรฐาน-noaa-solar-calculator)
+- [🌟 3 ช่องทางการใช้งานหลัก (Three Primary Interfaces)](#-3-ช่องทางการใช้งานหลัก-three-primary-interfaces)
+  - [1. Single Page HTML Web Application (เปิดบนเบราว์เซอร์ทันที แบบ Offline/Online)](#1-single-page-html-web-application-indexhtml--noaacalcmap)
+  - [2. Webchat UI & Local REST API Server (ระบบแชทภาษาไทย & API ในเครื่อง)](#2-webchat-ui--local-rest-api-server)
+  - [3. Google Antigravity Desktop & Agent Skill (ผู้ช่วย AI อัจฉริยะแบบ AI-Native)](#3-google-antigravity-desktop--agent-skill)
+- [🚀 การใช้งานผ่าน Command Line (CLI) & โหมด Interactive](#-การใช้งานผ่าน-command-line-cli--โหมด-interactive)
+  - [1. โหมดถาม-ตอบแบบโต้ตอบ (Interactive REPL)](#1-โหมดถาม-ตอบแบบโต้ตอบ-interactive-repl)
+  - [2. โหมดคำถามเดียวผ่าน Command Line (Single Query)](#2-โหมดคำถามเดียวผ่าน-command-line-single-query)
+  - [3. การบันทึกรายงานลงโฟลเดอร์ reports/ (UTF-8)](#3-การบันทึกรายงานลงโฟลเดอร์-reports-utf-8)
+  - [4. สร้างตารางดวงอาทิตย์ทั้งเดือน (Monthly Calendar Table)](#4-สร้างตารางดวงอาทิตย์ทั้งเดือน-monthly-calendar-table)
+  - [5. รันชุดทดสอบ Agent Evaluation Benchmark](#5-รันชุดทดสอบ-agent-evaluation-benchmark)
+  - [6. รัน Unit Tests ทั้งหมด](#6-รัน-unit-tests-ทั้งหมด)
+- [🐍 การเรียกใช้งานผ่าน Python Programmatic API](#-การเรียกใช้งานผ่าน-python-programmatic-api)
+- [🛡️ ระบบ Fallback ค้นหาสถานที่ใกล้เคียงอัจฉริยะ 4 ระดับ](#️-ระบบ-fallback-ค้นหาสถานที่ใกล้เคียงอัจฉริยะ-4-ระดับ)
+- [📐 1. สูตรดาราศาสตร์มาตรฐาน NOAA Solar Calculator (12 ขั้นตอน)](#1-สูตรดาราศาสตร์มาตรฐาน-noaa-solar-calculator)
   - [ตารางที่ 1: ภาพรวม 12 ขั้นตอนของอัลกอริทึม Jean Meeus](#ตารางที่-1-ภาพรวม-12-ขั้นตอนของอัลกอริทึม)
   - [ตารางที่ 2: สูตรแต่ละขั้น พร้อมค่าจริงของบ้านโป่ง 27 มี.ค. 2565](#ตารางที่-2-สูตรแต่ละขั้น-พร้อมค่าจริงของบ้านโป่ง-27-มีค-2565)
   - [ตารางที่ 3: สมการสุดท้ายที่ให้คำตอบเป็นเวลา](#ตารางที่-3-สมการสุดท้ายที่ให้คำตอบเป็นเวลา)
@@ -15,25 +37,273 @@
   - [ตารางที่ 6: เปรียบเทียบ NOAA กับอัลกอริทึมอื่น](#ตารางที่-6-เปรียบเทียบ-noaa-กับอัลกอริทึมอื่น)
   - [ตารางที่ 7: ข้อจำกัดและแหล่งความคลาดเคลื่อน](#ตารางที่-7-ข้อจำกัดและแหล่งความคลาดเคลื่อน)
   - [สรุปแก่นของสูตร](#สรุปแก่นของสูตร)
-- [2. ตัวอย่างการคำนวณจริง: อำเภอบ้านโป่ง จังหวัดราชบุรี](#2-ตัวอย่าง-เวลาดวงอาทิตย์ขึ้น–ตก-อำเภอบ้านโป่ง-จังหวัดราชบุรี-—-วันอาทิตย์ที่-27-มีนาคม-พศ-2565)
+- [📍 2. ตัวอย่างการคำนวณจริง: อำเภอบ้านโป่ง จังหวัดราชบุรี](#2-ตัวอย่าง-เวลาดวงอาทิตย์ขึ้น–ตก-อำเภอบ้านโป่ง-จังหวัดราชบุรี-—-วันอาทิตย์ที่-27-มีนาคม-พศ-2565)
   - [ตารางคำตอบหลัก](#ตารางที่-1-คำตอบหลัก)
   - [ตารางตัวแปรที่ใช้คำนวณ](#ตารางที่-2-ตัวแปรที่ใช้คำนวณ)
   - [ตารางเปรียบเทียบกับเมืองใกล้เคียง](#ตารางที่-3-เปรียบเทียบกับเมืองใกล้เคียง-วันเดียวกัน)
   - [แหล่งตรวจสอบเพิ่มเติม](#แหล่งตรวจสอบเพิ่มเติม)
-- [3. NOAA Solar Calculator Harness (ระบบคำนวณและถาม-ตอบภาษาไทย)](#3-noaa-solar-calculator-harness-ระบบคำนวณและถาม-ตอบภาษาไทย)
-  - [✨ ความสามารถหลัก (Features)](#-ความสามารถหลัก-features)
-  - [🛡️ ระบบ Fallback ค้นหาสถานที่ใกล้เคียงอัจฉริยะ 4 ระดับ](#️-ระบบ-fallback-ค้นหาสถานที่ใกล้เคียงอัจฉริยะ-4-ระดับ)
-  - [🚀 คู่มือการใช้งาน Command Line (CLI)](#-การใช้งาน-usage)
-    - [1. โหมดถาม-ตอบแบบโต้ตอบ (Interactive REPL)](#1-โหมดถาม-ตอบแบบโต้ตอบ-interactive-repl)
-    - [2. โหมดคำถามเดียวผ่าน Command Line (Single Query)](#2-โหมดคำถามเดียวผ่าน-command-line-single-query)
-    - [3. การบันทึกรายงานลงโฟลเดอร์ reports/ (UTF-8)](#3-การบันทึกรายงานลงโฟลเดอร์-reports-utf-8)
-    - [4. สร้างตารางดวงอาทิตย์ทั้งเดือน (Monthly Calendar Table)](#4-สร้างตารางดวงอาทิตย์ทั้งเดือน-monthly-calendar-table)
-    - [5. รันชุดทดสอบ Agent Evaluation Benchmark](#5-รันชุดทดสอบ-agent-evaluation-benchmark)
-    - [6. รัน Web Server และ Web Chat UI](#6-รัน-web-server-และ-web-chat-ui)
-    - [7. รัน Unit Tests ทั้งหมด](#7-รัน-unit-tests-ทั้งหมด)
-- [4. การเรียกใช้งานผ่าน Python Programmatic API](#4-การเรียกใช้งานผ่าน-python-programmatic-api)
-- [5. การใช้งานร่วมกับ Antigravity Desktop (AGENTS.md & SKILL.md)](#5-การใช้งานร่วมกับ-antigravity-desktop-agentsmd--skillmd)
-- [6. โครงสร้างโปรเจกต์ (Project Directory Structure)](#6-โครงสร้างโปรเจกต์-project-directory-structure)
+- [📁 โครงสร้างโปรเจกต์ (Project Directory Structure)](#-โครงสร้างโปรเจกต์-project-directory-structure)
+
+---
+
+## 🌟 3 ช่องทางการใช้งานหลัก (Three Primary Interfaces)
+
+ระบบ **NOAA Solar Calculator & Agent Harness** ได้รับการออกแบบให้ตอบโจทย์การใช้งานหลากหลายระดับ ตั้งแต่ผู้ใช้ทั่วไป นักดาราศาสตร์ จนถึงวิศวกรระบบ AI โดยมีช่องทางหลัก 3 รูปแบบ ดังนี้:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    NOAA Solar Calculator System Architecture                │
+├──────────────────────────┬────────────────────────────┬─────────────────────┤
+│ 1. Single Page HTML App  │ 2. Webchat UI & Local REST │ 3. Antigravity AI   │
+│                          │    API Server              │    Desktop Agent    │
+├──────────────────────────┼────────────────────────────┼─────────────────────┤
+│ • index.html             │ • python harness.py --serve│ • Antigravity IDE   │
+│ • ทำงานบนเบราว์เซอร์ 100% │ • Dark-mode Thai Chat UI   │ • AGENTS.md & SKILL │
+│ • ไม่ต้องติดตั้ง Python  │ • พอร์ตเริ่มต้น 8080       │ • สั่งบันทึก UTF-8  │
+│ • แผนที่ Leaflet / Google│ • REST API: /api/query     │ • กฎเหล็ก No Halluc │
+│ • ทำงานแบบ Offline ได้   │ • คลิก Google Maps ทันที   │ • Smart 4-Tier Fall │
+└──────────────────────────┴────────────────────────────┴─────────────────────┘
+```
+
+---
+
+### 1. Single Page HTML Web Application (`index.html` / `NOAAcalc.html`)
+
+เหมาะสำหรับผู้ใช้ที่ต้องการเปิดใช้งานผ่านหน้าเว็บทันทีอย่างรวดเร็ว โดย**ไม่ต้องติดตั้งโปรแกรม Python, Node.js หรือซอฟต์แวร์เสริมใดๆ** ทั้งสิ้น
+
+#### ✨ จุดเด่นและคุณสมบัติ
+- **Zero-Dependency & Offline 100%**: เป็นไฟล์ HTML แบบสมบูรณ์ในตัวเอง (Single Page Application) มีทั้ง HTML5, CSS3 และ JavaScript ทำงานบนฝั่งไคลเอนต์ (Client-side) ทั้งหมด
+- **เปิดใช้งานได้ทันที**: เพียงดับเบิลคลิกเปิดไฟล์ [`index.html`](index.html) หรือ [`NOAAcalc.html`](NOAAcalc.html) ในเว็บเบราว์เซอร์ใดก็ได้ (Chrome, Edge, Firefox, Safari) แม้ไม่มีอินเทอร์เน็ตก็คำนวณได้
+- **ออนไลน์ผ่าน GitHub Pages**: เข้าใช้งานได้ทั่วโลกผ่าน [https://deawpic.github.io/NOAAcalc/](https://deawpic.github.io/NOAAcalc/)
+- **แผนที่ Interactive Map**:
+  - ใช้แผนที่ OpenStreetMap (ผ่าน Leaflet) เป็นค่าเริ่มต้นโดยไม่ต้องใช้ API Key
+  - มีช่องใส่ **Google Maps API Key** สำหรับผู้ที่ต้องการสลับไปใช้แผนที่ดาวเทียมของ Google Maps
+  - สามารถคลิกจุดใดก็ได้บนแผนที่โลกเพื่อดึงพิกัดละติจูด/ลองจิจูดมาคำนวณทันที
+- **ค้นหาสถานที่ & Presets**: มีช่องค้นหาสถานที่ (OpenStreetMap Nominatim) และรายการพิกัดเมืองสำคัญสำเร็จรูป (บ้านโป่ง, กทม., นครปฐม, กาญจนบุรี, เชียงใหม่, ขอนแก่น, ภูเก็ต, นราธิวาส)
+- **ระบบปฏิทินสองศักราช (Date Picker)**: เลือกระบุวันที่ได้ทั้งแบบ Date Picker และแบบ Dropdown วัน/เดือน/ปี รองรับทั้งปีพุทธศักราช (พ.ศ.) และคริสต์ศักราช (ค.ศ.)
+- **KPIs & Solar Ephemeris ครบวงจร**:
+  - แสดงผลสรุป Real-time: เวลาพระอาทิตย์ขึ้น (Sunrise), ตก (Sunset), เที่ยงวันจริง (Solar Noon), ความยาวกลางวัน (Daylight Duration)
+  - แสงสนธยา 3 ระดับ (Civil, Nautical, Astronomical Twilight)
+  - ตารางมุมดวงอาทิตย์ (Azimuth & Elevation) ตลอด 24 ชั่วโมง
+  - ตารางสรุปเวลาดวงอาทิตย์รายเดือน (Monthly Calendar Table)
+
+#### 🚀 วิธีเปิดใช้งาน
+```bash
+# วิธีที่ 1: เปิดผ่านเบราว์เซอร์จากเครื่องโดยตรง (Linux / macOS / Windows)
+google-chrome index.html
+# หรือ
+xdg-open index.html
+
+# วิธีที่ 2: Deploy ขึ้น Static Hosting (GitHub Pages, Vercel, Netlify หรือ Apache/Nginx)
+# เพียงอัปโหลดไฟล์ index.html ไฟล์เดียวก็พร้อมใช้งานได้ทันที
+```
+
+---
+
+### 2. Webchat UI & Local REST API Server
+
+เหมาะสำหรับผู้ใช้และนักพัฒนาที่ต้องการแชทถาม-ตอบคำนวณเวลาดวงอาทิตย์เป็นภาษาไทยผ่านหน้าต่างเบราว์เซอร์ หรือต้องการเชื่อมต่อไปยังระบบอื่นผ่าน REST API
+
+#### ✨ จุดเด่นและคุณสมบัติ
+- **Built-in Zero-Dependency HTTP Server**: พัฒนาด้วยโมดูล `http.server` มาตรฐานของ Python โดยไม่ต้องติดตั้ง Flask, FastAPI หรือแพ็กเกจภายนอก
+- **หน้าต่างแชท Dark-Mode แสนสะดวก**: เข้าใช้งานที่ `http://localhost:8080/` มี UI แชทที่ออกแบบมารองรับทั้งมือถือและคอมพิวเตอร์
+- **ถาม-ตอบเป็นภาษาไทยอย่างเป็นธรรมชาติ**:
+  - สอบถามด้วยชื่อสถานที่: *"พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง"*
+  - สอบถามแบบสัมพัทธ์: *"พรุ่งนี้พระอาทิตย์ตกที่เชียงใหม่เวลาเท่าไหร่"*
+  - สอบถามด้วยพิกัด: *"พิกัด 13.8199, 99.8722 เที่ยงวันจริงกี่โมง"*
+- **ปุ่มลัดคำถามด่วน (Quick Suggestion Chips)**: มีปุ่มคลิกถามคำถามตัวอย่างได้ทันที เช่น บ้านโป่ง, เชียงใหม่, ผาแต้ม อุบลราชธานี, เที่ยงวันจริงกรุงเทพฯ
+- **แปลงลิงก์ Google Maps อัตโนมัติ**: ทุกคำตอบที่มีพิกัด ระบบจะแปลงเป็น Hyperlink ปักหมุด Google Maps ที่สามารถคลิกเปิดแท็บใหม่ได้ทันที
+- **REST API สำหรับนักพัฒนา (JSON Endpoints)**:
+  - `POST /api/query`: ส่งคำถามภาษาไทยแล้วรับผลลัพธ์แบบ Structured JSON
+  - `GET /api/calculate`: ส่งพิกัด ละติจูด ลองจิจูด และวันที่ เพื่อรับค่าคำนวณทางดาราศาสตร์ดิบ
+
+#### 🚀 วิธีเปิดใช้งาน
+```bash
+# เริ่มต้นเซิร์ฟเวอร์บนพอร์ตเริ่มต้น (8080)
+python harness.py --serve
+
+# หรือระบุพอร์ตที่ต้องการ (เช่น 3000)
+python harness.py --serve --port 3000
+```
+เมื่อรันแล้ว หน้าต่างเทอร์มินัลจะแสดงข้อความ:
+```text
+☀️ NOAA Solar Harness Server running at http://0.0.0.0:8080/ (Ctrl+C to stop)
+```
+จากนั้นเปิดเว็บเบราว์เซอร์ไปที่ **`http://localhost:8080/`** เพื่อเริ่มแชทได้ทันที
+
+#### 💻 ตัวอย่างการเรียกใช้ REST API ผ่าน cURL
+```bash
+# 1. ยิงคำถามภาษาไทยผ่าน /api/query
+curl -X POST http://localhost:8080/api/query \
+  -H "Content-Type: application/json" \
+  -d '{"query": "พระอาทิตย์ขึ้นที่เชียงใหม่ พรุ่งนี้กี่โมง"}'
+
+# 2. คำนวณพิกัดตรงผ่าน /api/calculate
+curl "http://localhost:8080/api/calculate?lat=13.8199&lon=99.8722&tz=7.0&year=2022&month=3&day=27"
+```
+
+---
+
+### 3. Google Antigravity Desktop & Agent Skill
+
+เหมาะสำหรับผู้ใช้งาน **Google Antigravity Desktop & CLI** ที่ต้องการผู้ช่วย AI อัจฉริยะ (Autonomous Coding & Astronomy Agent) มาช่วยคำนวณ วางแผนการเดินทาง สรุปข้อมูลดาราศาสตร์ และสร้างรายงานอัตโนมัติ
+
+#### ✨ สถาปัตยกรรมและการผสานงาน (Agent Integration)
+โปรเจกต์นี้ได้รับการกำหนดค่าให้เป็น **AI-Native Workspace** สำหรับ Antigravity Desktop:
+1. **[`AGENTS.md`](AGENTS.md) / [`.agents/AGENTS.md`](.agents/AGENTS.md)**:
+   - บรรจุกฎเหล็กทางดาราศาสตร์ (Deterministic Verification) ป้องกันการ Hallucinate ตัวเลขเวลาดวงอาทิตย์
+   - กำหนดให้ AI ต้องคำนวณผ่านอัลกอริทึม NOAA 12 ขั้นตอน (Jean Meeus) เสมอ
+   - บังคับใช้เขตเวลาท้องถิ่นประเทศไทย (UTC+7)
+   - บังคับแสดงปีคู่ **พ.ศ. และ ค.ศ.** ทุกครั้ง
+   - สร้างลิงก์หมุด **Google Maps** (`https://maps.google.com/?q={lat},{lon}`) ทุกคำตอบ
+   - กำหนดมาตรฐานการบันทึกรายงานลงโฟลเดอร์ **`reports/`** ด้วยการเข้ารหัส **`UTF-8`** เสมอ
+2. **[`SKILL.md`](.agents/skills/noaa-solar-harness/SKILL.md)**:
+   - Antigravity Custom Skill `noaa-solar-harness` ที่ระบุ System Instructions, CLI Contracts, และ Trigger Keywords ชัดเจน
+   - Antigravity Desktop จะทำการโหลดและเปิดใช้งานสกิลนี้อัตโนมัติทันทีที่ตรวจพบคำถามเกี่ยวกับดวงอาทิตย์ พระอาทิตย์ขึ้น-ตก หรือพิกัดภูมิศาสตร์
+
+#### 🚀 วิธีใช้งานใน Google Antigravity Desktop
+1. เปิดโปรแกรม **Antigravity Desktop**
+2. เลือกเปิดโฟลเดอร์โปรเจกต์: `NOAAcalc` (หรือไดเรกทอรีที่โคลนโปรเจกต์ไว้)
+3. พิมพ์สนทนากับ Agent ในกล่องข้อความของ Antigravity Desktop ได้ทันที:
+
+```text
+User: ดวงอาทิตย์ขึ้นและตกที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง ขอลิงก์แผนที่ด้วย
+
+Antigravity Agent:
+☀️ ข้อมูลเวลาดวงอาทิตย์: อำเภอบ้านโป่ง จังหวัดราชบุรี
+📅 วันที่: วันอาทิตย์ที่ 27 มีนาคม พ.ศ. 2565 (ค.ศ. 2022)
+🌐 พิกัด: ละติจูด 13.8199° N, ลองจิจูด 99.8722° E (เขตเวลา UTC+7)
+📍 พิกัด Google Maps: https://maps.google.com/?q=13.8199,99.8722
+
+⏰ เวลาตามปรากฏการณ์ (เวลาท้องถิ่นไทย):
+• ดวงอาทิตย์ขึ้น (Sunrise): 06:19:58 น. (ประมาณ 06:20 น.)
+• เที่ยงวันจริง (Solar Noon): 12:25:57 น. (ประมาณ 12:26 น.)
+• ดวงอาทิตย์ตก (Sunset): 18:31:55 น. (ประมาณ 18:32 น.)
+• ความยาวกลางวัน: 12 ชั่วโมง 11 นาที 57 วินาที
+```
+
+#### 📂 การสั่งบันทึกไฟล์รายงานอัตโนมัติลง `reports/` (UTF-8)
+สามารถสั่งการใน Antigravity Desktop ด้วยภาษาธรรมชาติให้บันทึกผลการคำนวณลงไฟล์:
+```text
+User: คำนวณเวลาดวงอาทิตย์ที่ผาแต้ม อุบลราชธานี วันขึ้นปีใหม่ 2568 แล้วบันทึกรายงานลงไฟล์ phataem_newyear.md
+```
+Agent ใน Antigravity จะทำการ:
+1. เรียกใช้งาน `SolarAgentHarness` เพื่อคำนวณพิกัดผาแต้ม
+2. บันทึกผลลัพธ์เป็นไฟล์ Markdown ลงใน `reports/phataem_newyear.md` ด้วย UTF-8
+3. แจ้งตำแหน่งไฟล์ผลลัพธ์ เช่น `reports/phataem_newyear.md` ให้ผู้ใช้เปิดอ่านได้ทันที
+
+#### ⚡ การผสานงานกับ Slash Commands ของ Antigravity
+- **`/plan`**: สั่งให้ Agent วางแผนและสร้างตารางเปรียบเทียบเวลาดวงอาทิตย์ขึ้นของ 77 จังหวัดทั่วไทย
+- **`/schedule`**: ตั้งเวลาให้แจ้งเตือนเวลาดวงอาทิตย์ขึ้น-ตกของวันพรุ่งนี้เป็นประจำทุกเย็น
+- **`/goal`**: ให้ Agent รันชุดทดสอบ Benchmark และปรับปรุงความแม่นยำของฐานข้อมูลพิกัด
+
+---
+
+## 🚀 การใช้งานผ่าน Command Line (CLI) & โหมด Interactive
+
+### 1. โหมดถาม-ตอบแบบโต้ตอบ (Interactive REPL)
+```bash
+python harness.py
+```
+สามารถพิมพ์คำถามเป็นภาษาไทยได้ต่อเนื่อง เช่น:
+- `พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง`
+- `คำนวณดวงอาทิตย์ที่พิกัด 13.8199, 99.8722`
+- `พรุ่งนี้พระอาทิตย์ตกที่เชียงใหม่กี่โมง`
+- `เที่ยงวันจริงที่กรุงเทพฯ วันนี้`
+- พิมพ์ `save [ชื่อไฟล์]` หรือ `บันทึก [ชื่อไฟล์]` เพื่อเซฟผลคำนวณล่าสุดลง `reports/`
+
+### 2. โหมดคำถามเดียวผ่าน Command Line (Single Query)
+```bash
+# ถามแบบข้อความธรรมชาติ (แสดงผลลัพธ์ละเอียดครบทุกตาราง)
+python harness.py "พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง"
+
+# ถามด้วยพิกัด GPS
+python harness.py "พิกัด 13.8199, 99.8722 พระอาทิตย์ตกกี่โมง"
+
+# สรุปสั้นกระชับ 1 บรรทัด (--short)
+python harness.py "พรุ่งนี้พระอาทิตย์ขึ้นที่เชียงใหม่กี่โมง" --short
+
+# ส่งออกเป็น JSON สำหรับ Agent / API pipeline (--json)
+python harness.py --location "บ้านโป่ง" --date "2022-03-27" --json
+```
+
+### 3. การบันทึกรายงานลงโฟลเดอร์ reports/ (UTF-8)
+```bash
+# บันทึกรายงานเป็น Markdown อัตโนมัติในโฟลเดอร์ reports/ (UTF-8):
+python harness.py "พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง" -o
+
+# ระบุชื่อไฟล์ปลายทาง (ระบบจะบันทึกใน reports/ เสมอ):
+python harness.py "พระอาทิตย์ขึ้นที่เชียงใหม่ วันนี้" -o chiangmai_report.md
+
+# สั่งบันทึกด้วยภาษาธรรมชาติ (ไม่ต้องใส่แฟล็ก):
+python harness.py "พระอาทิตย์ขึ้นที่บ้านโป่ง วันที่ 27 มี.ค. 2565 และบันทึกรายงานลงไฟล์"
+python harness.py "เที่ยงวันจริงที่กรุงเทพ วันนี้ บันทึกไฟล์ชื่อ bkk_noon.md"
+
+# บันทึกตารางทั้งเดือนลง reports/ (UTF-8):
+python harness.py --location "บ้านโป่ง" --month-table -o
+```
+
+### 4. สร้างตารางดวงอาทิตย์ทั้งเดือน (Monthly Calendar Table)
+```bash
+python harness.py --location "บ้านโป่ง" --date "2022-03-27" --month-table
+```
+
+### 5. รันชุดทดสอบ Agent Evaluation Benchmark
+```bash
+python harness.py --eval
+```
+
+### 6. รัน Unit Tests ทั้งหมด
+```bash
+python -m unittest discover tests
+```
+
+---
+
+## 🐍 การเรียกใช้งานผ่าน Python Programmatic API
+
+นำคลาส `SolarAgentHarness` หรือฟังก์ชันคำนวณไปใช้ในโปรเจกต์ Python อื่นๆ ได้โดยตรง:
+
+```python
+from noaaharness.agent import SolarAgentHarness
+
+# สร้างอ็อบเจกต์ Harness (เขตเวลาเริ่มต้น UTC+7)
+harness = SolarAgentHarness(default_tz=7.0)
+
+# ถาม-ตอบภาษาไทย
+result = harness.query("พระอาทิตย์ขึ้นที่บ้านโป่ง วันที่ 27 มี.ค. 2565 กี่โมง")
+
+# ผลลัพธ์ข้อความภาษาไทยพร้อมลิงก์ Google Maps:
+print(result["response_text"])
+
+# ข้อมูล Structured Data:
+solar = result["solar_result"]
+print(f"Sunrise: {solar['sunrise_hms']}, Sunset: {solar['sunset_hms']}, Noon: {solar['solar_noon_hms']}")
+```
+
+คำนวณด้วยสูตรดาราศาสตร์โดยตรงแบบไม่ต้องประมวลผลข้อความ:
+```python
+from noaaharness.solar_engine import calculate_solar
+
+# บ้านโป่ง วันที่ 27 มี.ค. 2565 (UTC+7)
+res = calculate_solar(lat=13.8199, lon=99.8722, tz=7.0, year=2022, month=3, day=27)
+print(f"Sunrise: {res.sunrise_hms}")  # 06:19:58
+print(f"Sunset:  {res.sunset_hms}")   # 18:31:55
+print(f"Noon:    {res.solar_noon_hms}") # 12:25:57
+```
+
+---
+
+## 🛡️ ระบบ Fallback ค้นหาสถานที่ใกล้เคียงอัจฉริยะ 4 ระดับ
+
+เมื่อผู้ใช้สอบถามสถานที่ที่ไม่พบพิกัดที่แน่ชัด หรือสะกดผิด ระบบจะทำงานตามลำดับขั้นดังนี้:
+
+| ระดับ (Tier) | กลไกการทำงาน | ตัวอย่างคำค้น | การตอบสนองของระบบ |
+| :--- | :--- | :--- | :--- |
+| **Tier 1: Fuzzy Typo** | แก้ไขคำสะกดผิดด้วย `difflib` (ความคล้ายคลึง ≥ 0.70) | `"เชียงใหม"`, `"พัดยา"`, `"กานจนบุรี"` | จับคู่กับ *"เชียงใหม่"*, *"พัทยา"*, *"กาญจนบุรี"* พร้อมแจ้งเหตุผลว่าสะกดใกล้เคียง |
+| **Tier 2: Hierarchical** | หากไม่พบสถานที่ย่อย จะดึงพิกัดอำเภอหรือจังหวัดแม่ที่ระบุในคำค้น | `"วัดร้างที่ไม่มีในแผนที่ สุพรรณบุรี"` | ดึงพิกัดศูนย์กลาง *"จังหวัดสุพรรณบุรี"* มาคำนวณแทนทันที |
+| **Tier 3: Proximity** | คำนวณระยะทาง Haversine เมื่อระบุพิกัด GPS | `"พิกัด 13.825, 99.875"` | แสดงจุดสังเกตใกล้เคียง เช่น `[ใกล้เคียง: อำเภอบ้านโป่ง ~0.6 กม.]` |
+| **Tier 4: Default Center** | หากไม่พบในสารบบและแผนที่ จะใช้อ้างอิงศูนย์กลางประเทศ | `"ดาวอังคารxyz999"` | แจ้งเตือนอย่างโปร่งใสและใช้อ้างอิง *"กรุงเทพมหานคร"* |
 
 ---
 
@@ -134,7 +404,7 @@
 | ขั้น 11 มีไว้ทำไม | $EoT$ แก้ความเหลื่อมระหว่าง "เวลานาฬิกา" กับ "เวลาดวงอาทิตย์จริง" ซึ่งแกว่ง ±16 นาทีตลอดปี |
 | ผลตรวจสอบ | คำนวณด้วยสูตรเต็มได้ **06:19:58 / 18:31:56** ตรงกับคำตอบที่ผมให้ไปคือ 06:20 / 18:32 ✓ |
 
-------
+---
 
 ## 2. ตัวอย่าง: เวลาดวงอาทิตย์ขึ้น–ตก อำเภอบ้านโป่ง จังหวัดราชบุรี — วันอาทิตย์ที่ 27 มีนาคม พ.ศ. 2565
 
@@ -173,7 +443,6 @@
 | กรุงเทพมหานคร | 100.50°E | 06:17 | 18:29 | เร็วกว่า ~3 นาที |
 | จ.กาญจนบุรี | 99.53°E | 06:21 | 18:34 | ช้ากว่า ~1–2 นาที |
 
-
 ### แหล่งตรวจสอบเพิ่มเติม
 
 | แหล่งข้อมูล | จุดเด่น | ลิงก์ |
@@ -191,175 +460,35 @@
 | ดวงอาทิตย์ตกกี่โมง | **18:32 น.** |
 | กลางวันยาวเท่าไร | **12 ชั่วโมง 12 นาที** |
 
---------
-
-## 3. NOAA Solar Calculator Harness (ระบบคำนวณและถาม-ตอบภาษาไทย)
-
-ระบบ Harness สำหรับคำนวณและถาม-ตอบเวลาดวงอาทิตย์ขึ้น-ตก-เที่ยงวันจริง พัฒนาขึ้นโดยอ้างอิงอัลกอริทึม NOAA 12 ขั้นตอน อย่างแม่นยำ (±1 นาที)
-
-### ✨ ความสามารถหลัก (Features)
-1. **ถาม-ตอบเป็นภาษาไทย (Natural Thai Q&A)**: เข้าใจคำถามภาษาไทยตามธรรมชาติ เช่น *"พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง"*, *"พรุ่งนี้พระอาทิตย์ตกที่เชียงใหม่กี่โมง"*
-2. **รองรับทั้งชื่อสถานที่และพิกัดภูมิศาสตร์**:
-   - ค้นหาด้วยชื่อจังหวัด (77 จังหวัด), อำเภอ, หรือจุดสำคัญ (เช่น ผาแต้ม, แหลมพรหมเทพ, ดอยอินทนนท์, แม่สาย, เบตง)
-   - ค้นหาด้วยพิกัดละติจูด/ลองจิจูดได้หลากหลายรูปแบบ เช่น `13.8199, 99.8722`, `lat: 13.82 lon: 99.87`
-   - ค้นหาตำแหน่งออนไลน์ผ่าน OpenStreetMap Nominatim แบบอัตโนมัติ
-3. **แสดงเวลาท้องถิ่น (Local Time)**: ระบุเวลาดวงอาทิตย์ขึ้น, ดวงอาทิตย์ตก, เที่ยงวันจริง (Solar Noon), และความยาวกลางวัน ในเขตเวลาท้องถิ่น
-4. **แสดงปีคู่ พ.ศ. และ ค.ศ.**: รองรับการแปลงปีพุทธศักราชและคริสต์ศักราชอย่างถูกต้อง
-5. **สร้างลิงก์ Google Maps ทุกการตอบกลับ**: มีลิงก์ `https://www.google.com/maps?q=lat,lon` ให้คลิกเปิดดูพิกัดบนแผนที่ได้ทันที
-6. **แสดงแสงสนธยา (Twilights)**: ครอบคลุมทั้ง Civil (พลเรือน), Nautical (เดินเรือ), และ Astronomical (ดาราศาสตร์)
-7. **ระบบ Fallback ค้นหาสถานที่ใกล้เคียงอัจฉริยะ 4 ระดับ (Smart Proximity & Multi-tier Fallback)**:
-   - ตรวจจับคำสะกดผิด ค้นหาตามเขตปกครองแม่ และคำนวณระยะห่างทางภูมิศาสตร์
-8. **Evaluation Benchmark Suite**: มีระบบทดสอบความถูกต้องและการตอบสนองอัตโนมัติ 9 กรณีศึกษา (Pass@1: 100%)
-
 ---
 
-### 🛡️ ระบบ Fallback ค้นหาสถานที่ใกล้เคียงอัจฉริยะ 4 ระดับ
-
-เมื่อผู้ใช้สอบถามสถานที่ที่ไม่พบพิกัดที่แน่ชัด หรือสะกดผิด ระบบจะทำงานตามลำดับขั้นดังนี้:
-
-| ระดับ (Tier) | กลไกการทำงาน | ตัวอย่างคำค้น | การตอบสนองของระบบ |
-| :--- | :--- | :--- | :--- |
-| **Tier 1: Fuzzy Typo** | แก้ไขคำสะกดผิดด้วย `difflib` (ความคล้ายคลึง ≥ 0.70) | `"เชียงใหม"`, `"พัดยา"`, `"กานจนบุรี"` | จับคู่กับ *"เชียงใหม่"*, *"พัทยา"*, *"กาญจนบุรี"* พร้อมแจ้งเหตุผลว่าสะกดใกล้เคียง |
-| **Tier 2: Hierarchical** | หากไม่พบสถานที่ย่อย จะดึงพิกัดอำเภอหรือจังหวัดแม่ที่ระบุในคำค้น | `"วัดร้างที่ไม่มีในแผนที่ สุพรรณบุรี"` | ดึงพิกัดศูนย์กลาง *"จังหวัดสุพรรณบุรี"* มาคำนวณแทนทันที |
-| **Tier 3: Proximity** | คำนวณระยะทาง Haversine เมื่อระบุพิกัด GPS | `"พิกัด 13.825, 99.875"` | แสดงจุดสังเกตใกล้เคียง เช่น `[ใกล้เคียง: อำเภอบ้านโป่ง ~0.6 กม.]` |
-| **Tier 4: Default Center** | หากไม่พบในสารบบและแผนที่ จะใช้อ้างอิงศูนย์กลางประเทศ | `"ดาวอังคารxyz999"` | แจ้งเตือนอย่างโปร่งใสและใช้อ้างอิง *"กรุงเทพมหานคร"* |
-
----
-
-### 🚀 คู่มือการใช้งาน Command Line (CLI)
-
-#### 1. โหมดถาม-ตอบแบบโต้ตอบ (Interactive REPL)
-```bash
-python harness.py
-```
-สามารถพิมพ์คำถามเป็นภาษาไทยได้ต่อเนื่อง เช่น:
-- `พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง`
-- `คำนวณดวงอาทิตย์ที่พิกัด 13.8199, 99.8722`
-- `พรุ่งนี้พระอาทิตย์ตกที่เชียงใหม่กี่โมง`
-- `เที่ยงวันจริงที่กรุงเทพฯ วันนี้`
-
-#### 2. โหมดคำถามเดียวผ่าน Command Line (Single Query)
-```bash
-# ถามแบบข้อความธรรมชาติ (แสดงผลลัพธ์ละเอียดครบทุกตาราง)
-python harness.py "พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง"
-
-# ถามด้วยพิกัด GPS
-python harness.py "พิกัด 13.8199, 99.8722 พระอาทิตย์ตกกี่โมง"
-
-# สรุปสั้นกระชับ 1 บรรทัด (--short)
-python harness.py "พรุ่งนี้พระอาทิตย์ขึ้นที่เชียงใหม่กี่โมง" --short
-
-# ส่งออกเป็น JSON สำหรับ Agent / API pipeline (--json)
-python harness.py --location "บ้านโป่ง" --date "2022-03-27" --json
-```
-
-#### 3. การบันทึกรายงานลงโฟลเดอร์ reports/ (UTF-8)
-```bash
-# บันทึกรายงานเป็น Markdown อัตโนมัติในโฟลเดอร์ reports/ (UTF-8):
-python harness.py "พระอาทิตย์ขึ้นที่อำเภอบ้านโป่ง วันที่ 27 มีนาคม 2565 กี่โมง" -o
-
-# ระบุชื่อไฟล์ปลายทาง (ระบบจะบันทึกใน reports/ เสมอ):
-python harness.py "พระอาทิตย์ขึ้นที่เชียงใหม่ วันนี้" -o chiangmai_report.md
-
-# สั่งบันทึกด้วยภาษาธรรมชาติ (ไม่ต้องใส่แฟล็ก):
-python harness.py "พระอาทิตย์ขึ้นที่บ้านโป่ง วันที่ 27 มี.ค. 2565 และบันทึกรายงานลงไฟล์"
-python harness.py "เที่ยงวันจริงที่กรุงเทพ วันนี้ บันทึกไฟล์ชื่อ bkk_noon.md"
-
-# บันทึกตารางทั้งเดือนลง reports/ (UTF-8):
-python harness.py --location "บ้านโป่ง" --month-table -o
-```
-
-#### 4. สร้างตารางดวงอาทิตย์ทั้งเดือน (Monthly Calendar Table)
-```bash
-python harness.py --location "บ้านโป่ง" --date "2022-03-27" --month-table
-```
-
-#### 5. รันชุดทดสอบ Agent Evaluation Benchmark
-```bash
-python harness.py --eval
-```
-
-#### 6. รัน Web Server และ Web Chat UI
-```bash
-python harness.py --serve --port 8080
-# เข้าใช้งานผ่านเว็บเบราว์เซอร์ได้ที่ http://localhost:8080/
-```
-
-#### 7. รัน Unit Tests ทั้งหมด
-```bash
-python -m unittest discover tests
-```
-
----
-
-## 4. การเรียกใช้งานผ่าน Python Programmatic API
-
-นำคลาส `SolarAgentHarness` หรือฟังก์ชันคำนวณไปใช้ในโปรเจกต์ Python อื่นๆ ได้โดยตรง:
-
-```python
-from noaaharness.agent import SolarAgentHarness
-
-# สร้างอ็อบเจกต์ Harness (เขตเวลาเริ่มต้น UTC+7)
-harness = SolarAgentHarness(default_tz=7.0)
-
-# ถาม-ตอบภาษาไทย
-result = harness.query("พระอาทิตย์ขึ้นที่บ้านโป่ง วันที่ 27 มี.ค. 2565 กี่โมง")
-
-# ผลลัพธ์ข้อความภาษาไทยพร้อมลิงก์ Google Maps:
-print(result["response_text"])
-
-# ข้อมูล Structured Data:
-solar = result["solar_result"]
-print(f"Sunrise: {solar['sunrise_hms']}, Sunset: {solar['sunset_hms']}, Noon: {solar['solar_noon_hms']}")
-```
-
-คำนวณด้วยสูตรดาราศาสตร์โดยตรงแบบไม่ต้องประมวลผลข้อความ:
-```python
-from noaaharness.solar_engine import calculate_solar
-
-# บ้านโป่ง วันที่ 27 มี.ค. 2565 (UTC+7)
-res = calculate_solar(lat=13.8199, lon=99.8722, tz=7.0, year=2022, month=3, day=27)
-print(f"Sunrise: {res.sunrise_hms}")  # 06:19:58
-print(f"Sunset:  {res.sunset_hms}")   # 18:31:55
-print(f"Noon:    {res.solar_noon_hms}") # 12:25:57
-```
-
----
-
-## 5. การใช้งานร่วมกับ Antigravity Desktop (AGENTS.md & SKILL.md)
-
-โปรเจกต์นี้รองรับ **Google Antigravity Desktop & CLI** แบบ AI-Native:
-
-1. **`AGENTS.md`**: ตั้งค่าบริบทและกฎเหล็กการตอบคำถามดาราศาสตร์ (ห้าม Hallucinate เวลาดวงอาทิตย์, แสดงปีคู่ พ.ศ./ค.ศ., แสดงเวลาท้องถิ่น, แนบลิงก์ Google Maps ทุกครั้ง)
-2. **`SKILL.md` (`.agents/skills/noaa-solar-harness/SKILL.md`)**: สกิลเฉพาะทางสำหรับ Antigravity เมื่อผู้ใช้เปิดแชทถามเรื่องเวลาพระอาทิตย์ขึ้น-ตก ระบบจะ Activate สกิลนี้อัตโนมัติ เพื่อดึงข้อมูลคำนวณอย่างแม่นยำ
-
----
-
-## 6. โครงสร้างโปรเจกต์ (Project Directory Structure)
+## 📁 โครงสร้างโปรเจกต์ (Project Directory Structure)
 
 ```text
 NOAAcalc/
 ├── AGENTS.md                                # กฎและบริบทสำหรับ AI Agent (Antigravity Desktop)
-├── README.md                                # คู่มือฉบับสมบูรณ์ สูตรคณิตศาสตร์ และสารบัญ
-├── index.html / NOAAcalc.html               # โค้ดต้นฉบับเว็บแอปคำนวณดวงอาทิตย์ (JavaScript)
-├── harness.py                               # CLI Entrypoint & โหมด Interactive REPL
+├── README.md                                # คู่มือฉบับสมบูรณ์ สารบัญ และ 3 ช่องทางการใช้งาน
+├── index.html / NOAAcalc.html               # เว็บแอป Single Page HTML ทำงานแบบ Offline/Online
+├── harness.py                               # CLI Entrypoint, Interactive REPL & Web Server
+├── .gitignore                               # กำหนดละเว้น reports/, cache และสภาพแวดล้อม
 ├── .agents/
 │   ├── AGENTS.md                            # Workspace rules mirror สำหรับ Antigravity
 │   └── skills/
 │       └── noaa-solar-harness/
 │           └── SKILL.md                     # Antigravity Skill สำหรับคำนวณดวงอาทิตย์
 ├── noaaharness/                             # แพ็กเกจหลักของระบบ Harness
+│   ├── __init__.py                          # Version & Exports
 │   ├── solar_engine.py                      # อัลกอริทึม 12 ขั้นตอน Jean Meeus / NOAA
 │   ├── geocoder.py                          # ระบบค้นหาพิกัดและ Smart Fallback 4 ระดับ
 │   ├── date_parser.py                       # ระบบแปลงวันที่ พ.ศ./ค.ศ. และคำระบุวันภาษาไทย
 │   ├── formatter.py                         # ระบบจัดรูปแบบคำตอบภาษาไทยและลิงก์ Google Maps
-│   ├── agent.py                             # Agent Harness และ Session State
-│   ├── evaluation.py                        # ชุดทดสอบ Benchmark 9 กรณีศึกษา
-│   └── web_server.py                        # เซิร์ฟเวอร์ HTTP และ Thai Chat UI
-└── tests/                                   # ชุดการทดสอบ Unit Tests 19 กรณีศึกษา
+│   ├── agent.py                             # Agent Harness, Natural Detection & จัดเก็บ reports/ UTF-8
+│   ├── evaluation.py                        # ชุดทดสอบ Benchmark 9 กรณีศึกษา (Pass@1 100%)
+│   └── web_server.py                        # เซิร์ฟเวอร์ HTTP และ Thai Chat UI (Dark Mode)
+├── reports/                                 # โฟลเดอร์จัดเก็บรายงานผลลัพธ์ (UTF-8) [Git-ignored]
+└── tests/                                   # ชุดการทดสอบ Unit Tests 20 กรณีศึกษา (100% Pass)
     ├── test_solar_engine.py                 # ทดสอบความถูกต้องเทียบ index.html
-    ├── test_geocoder.py                     # ทดสอบพิกัด, Haversine, และ Fallback
+    ├── test_geocoder.py                     # ทดสอบพิกัด, Haversine, และ Fallback 4 ระดับ
     ├── test_date_parser.py                  # ทดสอบการแปลงวันที่ พ.ศ. ⇄ ค.ศ.
-    └── test_agent_qa.py                     # ทดสอบการถาม-ตอบภาษาไทยแบบ End-to-End
+    └── test_agent_qa.py                     # ทดสอบถาม-ตอบภาษาไทย และการบันทึกรายงาน UTF-8
 ```
-
