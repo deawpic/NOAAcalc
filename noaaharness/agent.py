@@ -149,7 +149,7 @@ class SolarAgentHarness:
 
         return "all"
 
-    def extract_location_text(self, query: str) -> Optional[str]:
+    def extract_location_text(self, query: str, date_token: Optional[str] = None) -> Optional[str]:
         """
         Extracts location name or coordinate string from query text.
         Strips away date expressions, questions, and conversational particles.
@@ -159,32 +159,35 @@ class SolarAgentHarness:
         if coords:
             return f"{coords[0]}, {coords[1]}"
 
+        # Clean query by removing date token if provided
+        q_target = query
+        if date_token and date_token in query:
+            q_target = query.replace(date_token, " ")
+
         # 2. Check for specific landmarks and districts first (highest specificity)
-        LANDMARK_AMPHOE_KEYS = [
-            "ผาแต้ม", "แหลมพรหมเทพ", "ดอยอินทนนท์", "แม่สาย", "เบตง", "บ้านโป่ง",
-            "อ.บ้านโป่ง", "อำเภอบ้านโป่ง", "เมืองราชบุรี", "พัทยา", "หัวหิน", "เกาะสมุย",
-            "หาดใหญ่", "เกาะกูด", "หาดป่าตอง", "ดอยเสมอดาว", "อ่าวมาหยา", "บางกรวย"
-        ]
-        for lk in LANDMARK_AMPHOE_KEYS:
-            if lk in query:
+        from noaaharness.geocoder import PRESET_LANDMARKS, PRESET_LOCATIONS
+        sorted_landmarks = sorted(PRESET_LANDMARKS.keys(), key=lambda x: len(x), reverse=True)
+        for lk in sorted_landmarks:
+            if lk in q_target:
                 # If district is followed by province (e.g. "บ้านโป่ง ราชบุรี" or "บางกรวย นนทบุรี")
-                m_prov = re.search(rf'{lk}\s*(?:จ\.|จังหวัด)?\s*([^\s,;?!]+)', query)
+                m_prov = re.search(rf'{re.escape(lk)}\s*(?:จ\.|จังหวัด)?\s*([^\s,;?!]+)', q_target)
                 if m_prov and m_prov.group(1):
                     cand_prov = m_prov.group(1).strip()
-                    # ensure cand_prov is not a date or question word
-                    if not any(w in cand_prov for w in ["วัน", "เมื่อ", "เดือน", "ปี", "กี่โมง", "เท่า"]):
+                    # ensure cand_prov is not numeric, date or question word
+                    if not re.search(r'\d', cand_prov) and not any(w in cand_prov for w in ["วัน", "เมื่อ", "เดือน", "ปี", "กี่โมง", "เท่า", "ครับ", "ค่ะ"]):
                         return f"{lk} {cand_prov}"
                 return lk
 
-        # 3. Extract after location prepositions: ที่, ใน, แถว, ณ, แห่ง, พิกัด
+        # 3. Extract after location prepositions, admin levels, or landmark prefixes
         patterns = [
             r'(?<!เ)(?<!ทิต)(?<!สถาน)(?<!แผน)(?<!พื้น)(?<!หน้า)(?:ที่|ใน|แถว|ณ|แห่ง)\s*([^\s,;?!\d]+(?:\s+[^\s,;?!\d]+)?)',
             r'(?:อำเภอ|อ\.)\s*([^\s,;?!]+(?:\s+[^\s,;?!]+)?)',
             r'(?:จังหวัด|จ\.)\s*([^\s,;?!]+)',
+            r'((?:โรงพยาบาล|รพ\.|วัด|มหาวิทยาลัย|ม\.|โรงเรียน|รร\.|สถานี(?:รถไฟ|ขนส่ง)?|สนามบิน|ท่าอากาศยาน|อุทยาน(?:แห่งชาติ)?|เขื่อน|แหลม|อ่าว|เกาะ|หาด|ดอย|ภู|เขา)\s*[^\s,;?!\d]+(?:\s+[^\s,;?!\d]+)?)',
             r'(?:พิกัด|ละติจูด|latitude)\s*([^\s,;?!]+(?:\s+[^\s,;?!]+)?)',
         ]
         for pat in patterns:
-            match = re.search(pat, query)
+            match = re.search(pat, q_target)
             if match:
                 cand = match.group(1).strip()
                 # Clean filler words & date terms:
@@ -196,11 +199,19 @@ class SolarAgentHarness:
                     return cand
 
         # 4. Check for any preset location mention directly in query
-        from noaaharness.geocoder import PRESET_LOCATIONS
         sorted_keys = sorted(PRESET_LOCATIONS.keys(), key=lambda x: len(x), reverse=True)
         for key in sorted_keys:
-            if key in query:
+            if key in q_target:
                 return key
+
+        # 5. Fallback: if date_token is present, strip it and clean question words
+        if date_token and date_token in query:
+            rem = query.replace(date_token, " ")
+            rem = re.sub(r'(?:พระอาทิตย์|ดวงอาทิตย์|ตะวัน)?(?:ขึ้น|ตก|เที่ยงวัน(?:จริง)?|แสงสนธยา|สนธยา)?', '', rem)
+            rem = re.sub(r'(?:กี่โมง|เวลาใด|เวลา|เท่าไหร่|ช่วยคำนวณ|คำนวณ(?:เวลา)?|บันทึกไฟล์[^\s]*|เซฟไฟล์[^\s]*|ครับ|ค่ะ|หน่อย|บ้าง|นะ)', '', rem)
+            rem = re.sub(r'^[ที่ในแถวณแห่ง\s]+', '', rem).strip()
+            if rem and len(rem) >= 2:
+                return rem
 
         return None
 
@@ -231,7 +242,7 @@ class SolarAgentHarness:
         self.state.current_date = parsed_date
 
         # 3. Detect Location
-        loc_str = self.extract_location_text(q)
+        loc_str = self.extract_location_text(q, date_token=date_token)
         if loc_str:
             resolved_loc = resolve_location(loc_str, default_tz=self.default_tz)
             self.state.current_location = resolved_loc
