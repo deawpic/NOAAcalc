@@ -167,7 +167,7 @@ curl "http://localhost:8080/api/calculate?lat=13.8199&lon=99.8722&tz=7.0&year=20
 
 #### ✨ สถาปัตยกรรมและการผสานงาน (Agent Integration)
 โปรเจกต์นี้ได้รับการกำหนดค่าให้เป็น **AI-Native Workspace** สำหรับ Antigravity Desktop:
-1. **[`AGENTS.md`](AGENTS.md) / [`.agents/AGENTS.md`](.agents/AGENTS.md)**:
+1. **[`AGENTS.md`](AGENTS.md)**:
    - บรรจุกฎเหล็กทางดาราศาสตร์ (Deterministic Verification) ป้องกันการ Hallucinate ตัวเลขเวลาดวงอาทิตย์
    - กำหนดให้ AI ต้องคำนวณผ่านอัลกอริทึม NOAA 12 ขั้นตอน (Jean Meeus) เสมอ
    - บังคับใช้เขตเวลาท้องถิ่นประเทศไทย (UTC+7)
@@ -489,7 +489,6 @@ NOAAcalc/
 ├── harness.py                               # CLI Entrypoint, Interactive REPL & Web Server
 ├── .gitignore                               # กำหนดละเว้น reports/, cache และสภาพแวดล้อม
 ├── .agents/
-│   ├── AGENTS.md                            # Workspace rules mirror สำหรับ Antigravity
 │   └── skills/
 │       └── noaa-solar-harness/
 │           └── SKILL.md                     # Antigravity Skill สำหรับคำนวณดวงอาทิตย์
